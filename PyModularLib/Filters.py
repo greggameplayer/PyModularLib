@@ -1,15 +1,31 @@
 import operator
+from PyModularLib.FancyTable import FancyTable
 
 
 class Filter:
+    """
+    classe représentant un filtre
+    """
     def __init__(self, title):
+        """
+        initialisation
+        :param title:
+        """
         self.title = title
 
     def execute(self, content):
+        """
+        fonction permettant d'executer le filtre
+        :param content:
+        :return:
+        """
         pass
 
 
 class WordWrapFilter(Filter):
+    """
+    filtre permettant de découper l'entrée en ligne d'un nombre maximum de caractère donnée
+    """
     def __init__(self, lineLength):
         super().__init__("WordWrapFilter")
         try:
@@ -33,26 +49,40 @@ class WordWrapFilter(Filter):
 
 
 class BoxFilter(Filter):
-    def __init__(self):
+    """
+    filtre permettant de dessiner une boite autour de l'entrée texte
+    """
+    def __init__(self, color=""):
         super().__init__("BoxFilter")
+        decorated = False
+        for i in FancyTable.FancyTab:
+            if color == i:
+                self.color = color
+                decorated = True
+        if not decorated:
+            self.color = ""
 
     def execute(self, content):
         stringtab = content.split('\n')
         result = []
         max_index, max_value = max(enumerate([len(i) for i in stringtab]), key=operator.itemgetter(1))
 
-        result.append('+-' + ''.join(['-' for i in range(max_value)]) + '-+')
+        result.append(self.color + '+-' + ''.join(['-' for i in range(max_value)]) + '-+' + FancyTable.CEND)
 
         for idx, val in enumerate(stringtab):
             formatStr = '{0: ^' + str(max_value) + '}'
-            result.append('| ' + formatStr.format(val) + ' |')
+            result.append(self.color + '| ' + FancyTable.CEND + formatStr.format(val) + self.color + ' |' + FancyTable.CEND)
 
-        result.append('+-' + ''.join(['-' for i in range(max_value)]) + '-+')
+        result.append(self.color + '+-' + ''.join(['-' for i in range(max_value)]) + '-+' + FancyTable.CEND)
 
         return {'message': '\n'.join(result)}
 
 
 class EmailFilter(Filter):
+    """
+    filtre permettant de convertir l'entrée de texte en format mail avec le sujet, le destinataire, et l'envoyeur
+    en argument
+    """
     def __init__(self, sender, recipients, subject):
         super().__init__("EmailFilter")
         self.sender = sender
@@ -80,5 +110,5 @@ class EmailFilter(Filter):
             return {'error': 'Invalid recipient email'}
 
         return {
-            'message': 'MAIL FROM: ' + self.sender + '\nRCPT TO: ' + self.recipients + '\nDATA\nSubject: '\
+            'message': 'MAIL FROM: ' + self.sender + '\nRCPT TO: ' + self.recipients + '\nDATA\nSubject: ' \
                        + self.subject + '\n' + content}
